@@ -5,6 +5,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 	"html"
+	"os"
 	"strings"
 	"time"
 
@@ -36,6 +37,11 @@ func CreateToken(userId uint) (string, error) {
 	claims := jwt.MapClaims{}
 	claims["authorized"] = true
 	claims["userId"] = userId
-	claims["exp"] = time.Now().Add(time.Hour * 1).Unix()
-	return "", err
+	claims["expire"] = time.Now().Add(time.Hour).Unix()
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	return token.SignedString([]byte(os.Getenv("API_SECRET_KEY")))
+}
+
+func HandleError(err error) error {
+	return err
 }
