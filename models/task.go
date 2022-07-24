@@ -29,25 +29,15 @@ func (task *Task) CreateTask(checkListID uint, db *gorm.DB) (*Task, error) {
 	return &Task{}, err
 }
 
-/*func (task *Task) GetTasksByCheckList(checkListID uint, db *gorm.DB) (*[]Task, error) {
+func (task *Task) UpdateTask(_task Task, db *gorm.DB) (*Task, error) {
 	var err error
-	var tasks *[]Task
-	err = db.Debug().Where(&Task{CheckListID: checkListID}).Find(tasks).Error
-	return tasks, err
-}*/
-
-func (task *Task) UpdateTask(taskID uint, db *gorm.DB) (*Task, error) {
-	var err error
-	err = db.Debug().Where(&Task{ID: taskID}).UpdateColumns(map[string]interface{}{
-		"title":      task.Title,
-		"updated_at": time.Now(),
-	}).Error
+	err = db.Debug().Model(task).Updates(_task).Error
 	return task, err
 }
 
-func (task *Task) DeleteTask(taskID uint, db *gorm.DB) (*Task, error) {
+func (task *Task) DeleteTask(db *gorm.DB) (*Task, error) {
 	var err error
-	err = db.Debug().Where(&Task{ID: taskID}).Delete(task).Error
+	err = db.Debug().Delete(task).Error
 
 	return task, err
 }
