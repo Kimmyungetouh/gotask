@@ -16,6 +16,7 @@ type User struct {
 }
 
 func (user *User) BeforeSave() error {
+	user.PrepareToSave()
 	hashedPassword, err := helpers.Hash(user.Password)
 	if err == nil {
 		user.Password = string(hashedPassword)
@@ -51,8 +52,12 @@ func (user *User) Validate(action string) bool {
 	return true
 }
 
-func (user *User) SaveUser(db *gorm.DB) (*User, error) {
-	err := db.Create(user).Error
+func (user *User) Save(db *gorm.DB) (*User, error) {
+	err := user.BeforeSave()
+	if err != nil {
+		return nil, err
+	}
+	err = db.Create(user).Error
 	return user, err
 }
 
