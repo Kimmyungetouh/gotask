@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 	"log"
 	"os"
 	"strconv"
@@ -27,9 +26,9 @@ func CreateToken(userId uint) (string, error) {
 	claims := jwt.MapClaims{}
 	claims["authorized"] = true
 	claims["userId"] = userId
-	claims["expire"] = time.Now().Add(time.Hour).Unix()
+	claims["exp"] = time.Now().Add(time.Hour).Unix()
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-	return token.SignedString([]byte(os.Getenv("API_SECRET_KEY")))
+	return token.SignedString([]byte(os.Getenv("SECRET_KEY")))
 }
 
 func ExtractToken(context *gin.Context) string {
@@ -83,27 +82,14 @@ func ExtractTokenID(context *gin.Context) (uint, error) {
 	claims, ok := token.Claims.(jwt.MapClaims)
 
 	if ok && token.Valid {
-		uid, err := strconv.ParseUint(fmt.Sprintf("%.0f", claims["userId"]), 10, 32)
+		userID, err := strconv.ParseUint(fmt.Sprintf("%.0f", claims["userId"]), 10, 32)
 
 		if err != nil {
 			return 0, err
 		}
-		return uint(uid), err
+		return uint(userID), err
 	}
 
 	return 0, nil
 
-}
-
-func LoginCheck(username, password string, db *gorm.DB) (string, error) {
-
-	var token string
-
-	user, err := CheckUserPass(username, password, db)
-	if err != nil {
-		token = ""
-	}
-	token, err = CreateToken(user.ID)
-
-	return token, err
 }

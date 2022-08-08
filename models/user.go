@@ -15,7 +15,7 @@ type User struct {
 	UpdatedAt time.Time `gorm:"default: CURRENT_TIMESTAMP" json:"updated_at"`
 }
 
-func (user *User) BeforeSave() error {
+func (user *User) BeforeSave(db *gorm.DB) error {
 	user.PrepareToSave()
 	hashedPassword, err := helpers.Hash(user.Password)
 	if err == nil {
@@ -53,7 +53,7 @@ func (user *User) Validate(action string) bool {
 }
 
 func (user *User) Save(db *gorm.DB) (*User, error) {
-	err := user.BeforeSave()
+	err := user.BeforeSave(db)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +80,7 @@ func (user *User) GetUncompletedChecklists(db *gorm.DB) (*[]CheckList, error) {
 }
 
 func (user *User) UpdateUser(_user User, db *gorm.DB) (*User, error) {
-	err := user.BeforeSave()
+	err := user.BeforeSave(db)
 	if err != nil {
 		return nil, err
 	}
@@ -92,4 +92,25 @@ func (user *User) DeleteUser(db *gorm.DB) (*User, error) {
 	var err error
 	err = db.Debug().Delete(user).Error
 	return nil, err
+}
+
+func CheckUserPass(username string, password string, db *gorm.DB) (User, error) {
+	hashPassword, _ := helpers.Hash(password)
+	var user User
+	err := db.Debug().Model(User{Username: username, Password: string(hashPassword)}).Find(&user).Error
+
+	return user, err
+}
+
+func LoginCheck(username, password string, db *gorm.DB) (string, error) {
+
+	var token string
+
+	user, err := CheckUserPass(username, password, db)
+	if err != nil {
+		token = ""
+	}
+	token, err = helpers.CreateToken(user.ID)
+
+	return token, err
 }

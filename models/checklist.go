@@ -40,10 +40,10 @@ func (checkList *CheckList) Delete(db *gorm.DB) error {
 func (checkList *CheckList) DeleteCascade(db *gorm.DB) error {
 	var tasks *[]Task
 	err := db.Model(Task{CheckListID: checkList.ID}).Find(tasks).Error
-	helpers.HandleError(err)
+	helpers.HandleSimpleError(err)
 	for task := range *tasks {
 		err = db.Delete(&task).Error
-		helpers.HandleError(err)
+		helpers.HandleSimpleError(err)
 	}
 
 	err = db.Debug().Delete(checkList).Error

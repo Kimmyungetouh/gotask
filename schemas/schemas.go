@@ -8,5 +8,5 @@ type CheckListSchema struct {
 
 type LoginResponse struct {
 	Content string
-	User    interface{}
+	Error   string
 }

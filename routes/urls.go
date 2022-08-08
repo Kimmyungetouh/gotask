@@ -7,9 +7,8 @@ import (
 
 func PublicRoutes(g *gin.RouterGroup) {
 	g.GET("/", controllers.Home)
-	g.GET("/login", controllers.Login)
-	g.POST("/login", controllers.Login)
-	g.GET("/signup", controllers.Signup)
+	g.GET("/signin", controllers.Signin)
+	g.POST("/signup", controllers.Signup)
 
 }
 

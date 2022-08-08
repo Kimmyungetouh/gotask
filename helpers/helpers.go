@@ -1,10 +1,10 @@
 package helpers
 
 import (
-	"TaskManager/models"
+	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
-	"gorm.io/gorm"
 	"html"
+	"net/http"
 	"strings"
 )
 
@@ -16,18 +16,27 @@ func UserPassFilled(username, password string) bool {
 	return strings.Trim(username, "") != "" && strings.Trim(password, " ") != ""
 }
 
-func CheckUserPass(username string, password string, db *gorm.DB) (models.User, error) {
-	hashPassword, _ := Hash(password)
-	var user models.User
-	err := db.Debug().Model(models.User{Username: username, Password: string(hashPassword)}).Find(&user).Error
-
-	return user, err
-}
-
 func Prepare(stringToPrepare string) string {
 	return html.EscapeString(strings.TrimSpace(stringToPrepare))
 }
 
-func HandleError(err error) error {
-	return err
+func HandleError(context *gin.Context, detail string, err error) {
+	if err != nil {
+		context.JSON(http.StatusExpectationFailed, gin.H{
+			"detail": detail,
+			"error":  err.Error(),
+		})
+	}
+	return
+}
+
+func HandleSimpleError(err error) {
+	if err != nil {
+		panic(err.Error())
+	}
+}
+
+func CurrentUser(context *gin.Context) string {
+	userID := ExtractToken(context)
+	return userID
 }

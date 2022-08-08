@@ -1,16 +1,30 @@
 package main
 
-import "gorm.io/gorm"
-import "gorm.io/driver/sqlite"
-import "TaskManager/models"
+import (
+	"TaskManager/helpers"
+	"TaskManager/middleware"
+	"TaskManager/models"
+	"TaskManager/routes"
+	"github.com/gin-gonic/gin"
+)
 
 func main() {
-	db, err := gorm.Open(sqlite.Open("task_manager.db"), &gorm.Config{})
-	if err != nil {
-		panic(any("Error when connecting to the database !"))
-	}
+	db := helpers.ConnectDatabase()
+	db = models.RunMigrations(db)
+	// Loading env variables
 
-	db.AutoMigrate(&models.User{})
-	db.AutoMigrate(&models.CheckList{})
-	db.AutoMigrate(&models.Task{})
+	//envError := godotenv.Load(".env")
+	//helpers.HandleSimpleError(envError)
+
+	router := gin.Default()
+
+	prefix := router.Group("/api/")
+	public := prefix
+	routes.PublicRoutes(public)
+
+	private := prefix
+	private.Use(middleware.JWTAuthMiddleware())
+	routes.PrivateRoutes(private)
+
+	router.Run(":8000")
 }
