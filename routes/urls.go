@@ -2,12 +2,14 @@ package routes
 
 import (
 	"TaskManager/controllers"
+
 	"github.com/gin-gonic/gin"
 )
 
 func PublicRoutes(g *gin.RouterGroup) {
 	g.GET("/", controllers.Home)
-	g.GET("/signin", controllers.Signin)
+	g.GET("/users", controllers.AllUsers)
+	g.POST("/signin", controllers.Signin)
 	g.POST("/signup", controllers.Signup)
 
 }

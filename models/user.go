@@ -15,19 +15,19 @@ type User struct {
 	UpdatedAt time.Time `gorm:"default: CURRENT_TIMESTAMP" json:"updated_at"`
 }
 
-func (user *User) BeforeSave(db *gorm.DB) error {
-	user.PrepareToSave()
-	hashedPassword, err := helpers.Hash(user.Password)
-	if err == nil {
-		user.Password = string(hashedPassword)
-	}
-
-	return err
+func (user *User) BeforeSave(db *gorm.DB) *User {
+	preparedUser := user.PrepareToSave()
+	//hashedPassword, err := helpers.Hash(preparedUser.Password)
+	//if err == nil {
+	//	preparedUser.Password = string(hashedPassword)
+	//}
+	return preparedUser
 }
 
-func (user *User) PrepareToSave() {
+func (user *User) PrepareToSave() *User {
 	user.Username = helpers.Prepare(user.Username)
 	user.Password = helpers.Prepare(user.Password)
+	return user
 }
 
 func (user *User) Validate(action string) bool {
@@ -53,11 +53,11 @@ func (user *User) Validate(action string) bool {
 }
 
 func (user *User) Save(db *gorm.DB) (*User, error) {
-	err := user.BeforeSave(db)
-	if err != nil {
-		return nil, err
-	}
-	err = db.Create(user).Error
+	_user := user.BeforeSave(db)
+	//if _err != nil {
+	//	return user, _err
+	//}
+	err := db.Create(_user).Error
 	return user, err
 }
 
@@ -80,12 +80,12 @@ func (user *User) GetUncompletedChecklists(db *gorm.DB) (*[]CheckList, error) {
 }
 
 func (user *User) UpdateUser(_user User, db *gorm.DB) (*User, error) {
-	err := user.BeforeSave(db)
-	if err != nil {
-		return nil, err
-	}
-	err = db.Debug().Model(user).Updates(_user).Error
-	return user, err
+	userToUpdate := user.BeforeSave(db)
+	//if err != nil {
+	//	return nil, err
+	//}
+	err := db.Debug().Model(userToUpdate).Updates(_user).Error
+	return userToUpdate, err
 }
 
 func (user *User) DeleteUser(db *gorm.DB) (*User, error) {
@@ -94,23 +94,31 @@ func (user *User) DeleteUser(db *gorm.DB) (*User, error) {
 	return nil, err
 }
 
-func CheckUserPass(username string, password string, db *gorm.DB) (User, error) {
-	hashPassword, _ := helpers.Hash(password)
+func CheckUserPass(username string, password string, db *gorm.DB) (*User, string) {
 	var user User
-	err := db.Debug().Model(User{Username: username, Password: string(hashPassword)}).Find(&user).Error
-
-	return user, err
+	errDb := db.Debug().Where(&User{Username: username}).First(&user).Error
+	if errDb != nil {
+		return &user, errDb.Error()
+	}
+	//hashedPassword := []byte(user.Password)
+	//bytePassword := []byte(password)
+	if user.Password != password {
+		return &user, "Credentials doesn't match"
+	}
+	//errHashCompare := bcrypt.CompareHashAndPassword(hashedPassword, bytePassword)
+	return &user, ""
 }
 
 func LoginCheck(username, password string, db *gorm.DB) (string, error) {
 
 	var token string
+	var err error
 
 	user, err := CheckUserPass(username, password, db)
-	if err != nil {
+	if err != "" {
 		token = ""
 	}
-	token, err = helpers.CreateToken(user.ID)
+	token, _err = helpers.CreateToken(user.ID)
 
 	return token, err
 }

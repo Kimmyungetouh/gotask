@@ -9,7 +9,8 @@ import (
 )
 
 func Hash(password string) ([]byte, error) {
-	return bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	hashedBytes, hashError := bcrypt.GenerateFromPassword([]byte(password), 1)
+	return hashedBytes, hashError
 }
 
 func UserPassFilled(username, password string) bool {
@@ -17,16 +18,17 @@ func UserPassFilled(username, password string) bool {
 }
 
 func Prepare(stringToPrepare string) string {
-	return html.EscapeString(strings.TrimSpace(stringToPrepare))
+	if stringToPrepare != "" {
+		return html.EscapeString(strings.TrimSpace(stringToPrepare))
+	}
+	panic(stringToPrepare)
 }
 
 func HandleError(context *gin.Context, detail string, err error) {
-	if err != nil {
-		context.JSON(http.StatusExpectationFailed, gin.H{
-			"detail": detail,
-			"error":  err.Error(),
-		})
-	}
+	context.JSON(http.StatusExpectationFailed, gin.H{
+		"detail": detail,
+		"error":  err.Error(),
+	})
 	return
 }
 

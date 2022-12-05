@@ -23,13 +23,31 @@ func Pretty(data interface{}) {
 }
 
 func CreateToken(userId uint) (string, error) {
+
+	tokenLifespan, err := strconv.Atoi(os.Getenv("TOKEN_HOUR_LIFESPAN"))
+
+	if err != nil {
+		return "", err
+	}
+
+	claims := jwt.MapClaims{}
+	claims["authorized"] = true
+	claims["user_id"] = userId
+	claims["exp"] = time.Now().Add(time.Hour * time.Duration(tokenLifespan)).Unix()
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	return token.SignedString([]byte(os.Getenv("API_SECRET")))
+
+}
+
+/*func CreateToken(userId uint) (string, error) {
 	claims := jwt.MapClaims{}
 	claims["authorized"] = true
 	claims["userId"] = userId
 	claims["exp"] = time.Now().Add(time.Hour).Unix()
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 	return token.SignedString([]byte(os.Getenv("SECRET_KEY")))
-}
+}*/
 
 func ExtractToken(context *gin.Context) string {
 	token := context.Query("token")

@@ -6,6 +6,7 @@ import (
 	"TaskManager/models"
 	"TaskManager/routes"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 func main() {
@@ -13,8 +14,8 @@ func main() {
 	db = models.RunMigrations(db)
 	// Loading env variables
 
-	//envError := godotenv.Load(".env")
-	//helpers.HandleSimpleError(envError)
+	envError := godotenv.Load(".env")
+	helpers.HandleSimpleError(envError)
 
 	router := gin.Default()
 
@@ -26,5 +27,5 @@ func main() {
 	private.Use(middleware.JWTAuthMiddleware())
 	routes.PrivateRoutes(private)
 
-	router.Run(":8000")
+	router.Run("127.0.0.1:9000")
 }
